@@ -60,7 +60,7 @@ Built artifacts go to `dist/` (gitignored). Run `./build.sh` then `./package.sh`
 ```bash
 git clone https://github.com/AxioGlobal/axio360-mcp.git
 cd axio360-mcp
-cd axio360-mcpb/server && npm install && cd ../..
+cd mcpb/server && npm install && cd ../..
 ```
 
 ### Build the MCPB

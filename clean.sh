@@ -8,7 +8,7 @@ echo "==> Remove dist/"
 rm -rf "$DIST"
 
 echo "==> Remove intermediate MCPB"
-rm -f "$SCRIPT_DIR/axio360-mcpb/axio360-mcpb.mcpb"
+rm -f "$SCRIPT_DIR/mcpb/mcpb.mcpb"
 
 echo "==> Remove temp plugin"
 rm -f /tmp/axio360.plugin

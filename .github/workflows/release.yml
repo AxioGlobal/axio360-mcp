@@ -44,7 +44,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: axio360-mcpb/server/package-lock.json
+          cache-dependency-path: mcpb/server/package-lock.json
 
       - name: Resolve pull request number
         id: pr
@@ -108,7 +108,7 @@ jobs:
       - name: Install server dependencies and mcpb
         run: |
           set -euo pipefail
-          npm ci --prefix axio360-mcpb/server
+          npm ci --prefix mcpb/server
           npm install -g @anthropic-ai/mcpb@2.1.2
 
       - name: Prepare signing certificate

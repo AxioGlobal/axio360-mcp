@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MCPB_DIR="$SCRIPT_DIR/axio360-mcpb"
+MCPB_DIR="$SCRIPT_DIR/mcpb"
 CERT="$SCRIPT_DIR/cert.pem"
 KEY="$SCRIPT_DIR/key.pem"
 DIST="$SCRIPT_DIR/dist"
@@ -21,13 +21,13 @@ cd "$MCPB_DIR"
 NODE_OPTIONS= mcpb pack
 
 echo "==> Sign"
-NODE_OPTIONS= mcpb sign axio360-mcpb.mcpb --cert "$CERT" --key "$KEY"
+NODE_OPTIONS= mcpb sign mcpb.mcpb --cert "$CERT" --key "$KEY"
 
 echo "==> Patch ZIP EOCD comment length"
-NODE_OPTIONS= node "$SCRIPT_DIR/scripts/patch-mcpb-comment.js" axio360-mcpb.mcpb
+NODE_OPTIONS= node "$SCRIPT_DIR/scripts/patch-mcpb-comment.js" mcpb.mcpb
 
 echo "==> Copy to dist/"
-cp axio360-mcpb.mcpb "$DIST/axio360.mcpb"
+cp mcpb.mcpb "$DIST/axio360.mcpb"
 
 echo ""
 echo "Done: $DIST/axio360.mcpb"

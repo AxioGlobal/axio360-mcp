@@ -8,9 +8,9 @@ const { join } = require("node:path");
 const ROOT = join(__dirname, "..");
 const VERSION_RE = /^[0-9]+\.[0-9]+\.[0-9]+$/;
 
-const manifestPath = join(ROOT, "axio360-mcpb", "manifest.json");
-const pluginPath = join(ROOT, "axio360-plugin", ".claude-plugin", "plugin.json");
-const serverPath = join(ROOT, "axio360-mcpb", "server", "index.js");
+const manifestPath = join(ROOT, "mcpb", "manifest.json");
+const pluginPath = join(ROOT, "plugin", ".claude-plugin", "plugin.json");
+const serverPath = join(ROOT, "mcpb", "server", "index.js");
 
 function fail(message) {
   console.error(message);

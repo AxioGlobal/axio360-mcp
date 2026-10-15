@@ -6,22 +6,22 @@ Instructions for AI agents working in this repository.
 
 Two Claude extensions that connect Claude to the Axio360 cyber risk platform:
 
-- **`axio360-mcpb/`** — A Claude Desktop/Cowork extension (`.mcpb`). A local Node.js MCP server that proxies the Axio360 HTTP MCP endpoint via stdio. Includes MCP prompts for explore/scenarios/report workflows.
-- **`axio360-plugin/`** — A Claude Cowork plugin (`.plugin`). Skill-based workflows using `mcp__axio360__*` tools — requires the MCPB to be installed.
+- **`mcpb/`** — A Claude Desktop/Cowork extension (`.mcpb`). A local Node.js MCP server that proxies the Axio360 HTTP MCP endpoint via stdio. Includes MCP prompts for explore/scenarios/report workflows.
+- **`plugin/`** — A Claude Cowork plugin (`.plugin`). Skill-based workflows using `mcp__axio360__*` tools — requires the MCPB to be installed.
 
 Built artifacts go to `dist/` (gitignored). Run `./build.sh` then `./package.sh` to produce them.
 
 ## Repository structure
 
 ```text
-axio360-mcpb/
+mcpb/
   manifest.json          # MCPB manifest — tools, prompts, user_config, compatibility
   server/
     index.js             # Node.js MCP server (proxy + prompts)
     package.json
     node_modules/        # gitignored; must be present before mcpb pack
 
-axio360-plugin/
+plugin/
   .claude-plugin/
     plugin.json          # Plugin manifest
   .mcp.json              # Empty mcpServers (plugin uses MCPB tools, not direct curl)
@@ -66,7 +66,7 @@ The token is a JWT issued by Axio360 (Account Settings → API Access). **Do not
 npm install -g @anthropic-ai/mcpb
 
 # Install server dependencies (only needed after clone or package.json changes)
-cd axio360-mcpb/server && npm install && cd ../..
+cd mcpb/server && npm install && cd ../..
 
 # Generate signing cert (repo root, not committed)
 openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
@@ -89,7 +89,7 @@ Runs: `mcpb pack` → `mcpb sign` → ZIP EOCD patch → `dist/axio360.mcpb`
 # → dist/axio360.plugin
 ```
 
-Zips `axio360-plugin/` into `dist/axio360.plugin`. Run `./build.sh` separately for `dist/axio360.mcpb`.
+Zips `plugin/` into `dist/axio360.plugin`. Run `./build.sh` separately for `dist/axio360.mcpb`.
 
 ### Clean
 
@@ -97,7 +97,7 @@ Zips `axio360-plugin/` into `dist/axio360.plugin`. Run `./build.sh` separately f
 ./clean.sh
 ```
 
-Removes `dist/`, the intermediate `axio360-mcpb/axio360-mcpb.mcpb`, and the temp `/tmp/axio360.plugin`. Run before a fresh build if you want to be sure no stale artifacts remain.
+Removes `dist/`, the intermediate `mcpb/mcpb.mcpb`, and the temp `/tmp/axio360.plugin`. Run before a fresh build if you want to be sure no stale artifacts remain.
 
 ## Releases
 
@@ -128,6 +128,6 @@ Skills use `mcp__axio360__*` tools provided by the installed MCPB. They do not m
 ## Key conventions
 
 - Do not validate JWT expiration client-side anywhere in this codebase.
-- `node_modules/` must be present inside `axio360-mcpb/server/` before running `mcpb pack`.
+- `node_modules/` must be present inside `mcpb/server/` before running `mcpb pack`.
 - The `.mcp.json` in the plugin has an empty `mcpServers` object by design.
 - All built artifacts belong in `dist/` — do not place `.mcpb`, `.plugin`, or `.zip` files at the repo root.
