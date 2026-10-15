@@ -1,0 +1,93 @@
+{
+  "manifest_version": "0.3",
+  "name": "axio360",
+  "display_name": "Axio360",
+  "version": "1.5.0",
+  "description": "Connect Claude to Axio360 for cyber risk assessments, scenario analysis, creates/updates, and stakeholder reporting.",
+  "author": {
+    "name": "Axio",
+    "url": "https://axio.com"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "AXIO360_API_TOKEN": "${user_config.api_token}",
+        "AXIO360_ENV": "${user_config.environment}"
+      }
+    }
+  },
+  "user_config": {
+    "api_token": {
+      "type": "string",
+      "title": "API Token",
+      "description": "Your Axio360 API token. Find it in Axio360 under Account Settings → API Access.",
+      "required": false,
+      "sensitive": true
+    },
+    "environment": {
+      "type": "string",
+      "title": "Region",
+      "description": "Your Axio360 region: us (default), ca, or eu. Leave blank for US. Not case-sensitive.",
+      "required": false,
+      "default": "us"
+    }
+  },
+  "tools": [
+    { "name": "connection_info", "description": "Report which Axio360 region this connection targets" },
+    { "name": "who_am_i", "description": "Return the currently authenticated user" },
+    { "name": "list_assessments", "description": "List all assessments" },
+    { "name": "get_assessment", "description": "Get a specific assessment by ID" },
+    { "name": "get_assessment_scores", "description": "Get scores for an assessment" },
+    { "name": "update_assessment", "description": "Update an assessment name, description, and/or practice responses" },
+    { "name": "create_assessment", "description": "Create a new assessment from a licensed model" },
+    { "name": "list_assessment_models", "description": "List available assessment models" },
+    { "name": "get_assessment_model", "description": "Get a specific assessment model by ID" },
+    { "name": "list_scenario_collections", "description": "List all scenario collections" },
+    { "name": "get_scenario_collection", "description": "Get a specific scenario collection by ID" },
+    { "name": "get_scenario_collection_scenarios", "description": "List scenarios within a collection" },
+    { "name": "update_scenario_collection", "description": "Update scenario collection metadata" },
+    { "name": "create_scenario_collection", "description": "Create a new scenario collection" },
+    { "name": "list_catalog_scenarios", "description": "List available catalog scenarios" },
+    { "name": "get_scenario", "description": "Get a specific scenario by ID" },
+    { "name": "update_scenario", "description": "Update a scenario title, description, and/or susceptibility" },
+    { "name": "create_scenario_from_catalog", "description": "Create a scenario in a collection from a catalog scenario" },
+    { "name": "get_scenario_estimated_values", "description": "Get estimated financial values for a scenario" },
+    { "name": "update_estimated_value", "description": "Update min/expected/max amounts for an estimated value" },
+    { "name": "get_scenario_impact_distribution", "description": "Get impact probability distribution for a scenario" },
+    { "name": "get_scenario_loss_exceedance_curve", "description": "Get the loss exceedance curve for a scenario" },
+    { "name": "get_scenario_quadrant_breakdown", "description": "Get likelihood vs impact quadrant breakdown for a scenario" },
+    { "name": "get_collection_loss_exceedance_curve", "description": "Get the loss exceedance curve for an entire scenario collection" }
+  ],
+  "prompts": [
+    {
+      "name": "axio360-explore",
+      "description": "Explore assessments, scores, and risk models from Axio360",
+      "text": "Explore my Axio360 assessments and risk scores."
+    },
+    {
+      "name": "axio360-scenarios",
+      "description": "Analyze cyber risk scenarios, loss curves, and impact distributions",
+      "text": "Analyze my Axio360 cyber risk scenarios."
+    },
+    {
+      "name": "axio360-report",
+      "description": "Generate a stakeholder-ready cyber risk report (optional: audience=board|ciso|risk-committee)",
+      "text": "Generate a stakeholder report from my Axio360 data."
+    }
+  ],
+  "prompts_generated": false,
+  "tools_generated": false,
+  "compatibility": {
+    "claude_desktop": ">=1.0.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "keywords": ["cyber risk", "axio360", "assessment", "scenarios"],
+  "license": "MIT"
+}
