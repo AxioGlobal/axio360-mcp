@@ -24,19 +24,7 @@ echo "==> Sign"
 NODE_OPTIONS= mcpb sign axio360-mcpb.mcpb --cert "$CERT" --key "$KEY"
 
 echo "==> Patch ZIP EOCD comment length"
-python3 - <<'EOF'
-import struct, sys
-with open("axio360-mcpb.mcpb", "rb") as f:
-    data = bytearray(f.read())
-pos = data.rfind(b"PK\x05\x06")
-if pos == -1:
-    sys.exit("ERROR: ZIP EOCD not found")
-extra = len(data) - pos - 22
-struct.pack_into("<H", data, pos + 20, extra)
-with open("axio360-mcpb.mcpb", "wb") as f:
-    f.write(data)
-print(f"  comment_len patched to {extra}")
-EOF
+NODE_OPTIONS= node "$SCRIPT_DIR/scripts/patch-mcpb-comment.js" axio360-mcpb.mcpb
 
 echo "==> Copy to dist/"
 cp axio360-mcpb.mcpb "$DIST/axio360.mcpb"

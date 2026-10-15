@@ -184,7 +184,7 @@ async function main() {
   }
 
   const server = new Server(
-    { name: "axio360", version: "1.5.0" },
+    { name: "axio360", version: "1.0.0" },
     { capabilities: { tools: {}, prompts: {} }, instructions: SERVER_INSTRUCTIONS }
   );
 

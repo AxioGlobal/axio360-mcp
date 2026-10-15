@@ -30,9 +30,14 @@ axio360-plugin/
     axio360-scenarios-mcp/SKILL.md
     axio360-report-mcp/SKILL.md
 
+VERSION                  # Release line (1.0.0). Each release increments the patch
 build.sh                 # Build the MCPB → dist/axio360.mcpb
-package.sh               # Build the plugin + assemble dist/axio360-pilot.zip
+package.sh               # Build the plugin → dist/axio360.plugin
 clean.sh                 # Remove dist/ and intermediate build artifacts
+scripts/resolve-version.sh
+scripts/stamp-version.js
+scripts/patch-mcpb-comment.js
+.github/workflows/release.yml
 dist/                    # All built artifacts (gitignored)
 ```
 
@@ -43,7 +48,7 @@ The Axio360 MCP endpoint is region-based: `https://<prefix>api.axio.com/api/mcp`
 The region is chosen at install time via the **Region** user_config field, passed to the server as `AXIO360_ENV` and resolved to a base URL by the `AXIO_BASES` map in `server/index.js`:
 
 | `AXIO360_ENV` | Base URL |
-|---------------|----------|
+| --------------- | ---------- |
 | `us` (default) | `https://api.axio.com` |
 | `ca` | `https://ca-api.axio.com` |
 | `eu` | `https://eu-api.axio.com` |
@@ -63,9 +68,6 @@ npm install -g @anthropic-ai/mcpb
 # Install server dependencies (only needed after clone or package.json changes)
 cd axio360-mcpb/server && npm install && cd ../..
 
-# Install PDF tooling (package.sh renders GETTING_STARTED.md → PDF)
-brew install pandoc typst
-
 # Generate signing cert (repo root, not committed)
 openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
   -subj "/CN=Axio/O=Axio/C=US" -addext "extendedKeyUsage=codeSigning"
@@ -80,14 +82,14 @@ openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -node
 
 Runs: `mcpb pack` → `mcpb sign` → ZIP EOCD patch → `dist/axio360.mcpb`
 
-### Assemble the pilot package
+### Build the plugin
 
 ```bash
 ./package.sh
-# → dist/axio360-pilot.zip  (contains axio360.mcpb, axio360.plugin, GETTING_STARTED.pdf)
+# → dist/axio360.plugin
 ```
 
-Requires `dist/axio360.mcpb` to exist — run `./build.sh` first. Also renders `GETTING_STARTED.md` to `dist/GETTING_STARTED.pdf` via `pandoc --pdf-engine=typst` and includes it in the ZIP.
+Zips `axio360-plugin/` into `dist/axio360.plugin`. Run `./build.sh` separately for `dist/axio360.mcpb`.
 
 ### Clean
 
@@ -97,10 +99,18 @@ Requires `dist/axio360.mcpb` to exist — run `./build.sh` first. Also renders `
 
 Removes `dist/`, the intermediate `axio360-mcpb/axio360-mcpb.mcpb`, and the temp `/tmp/axio360.plugin`. Run before a fresh build if you want to be sure no stale artifacts remain.
 
+## Releases
+
+`.github/workflows/release.yml` builds `axio360.mcpb` and `axio360.plugin` on every pull request (artifacts on the workflow run) and publishes a GitHub Release when that pull request is merged to `main`.
+
+Versions restart at `1.0.0` (`VERSION`). Each release increments the patch by 1: `1.0.0`, then `1.0.1`, then `1.0.2`. Set `VERSION` to `1.1.0` or `2.0.0` to open the next release line; the next publish uses that version, and later publishes increment its patch. CI stamps the release version into `manifest.json`, `plugin.json`, and the MCP server before packaging. Leave those files at the `VERSION` value in git.
+
+Signing uses repository secrets `MCPB_SIGNING_CERT` and `MCPB_SIGNING_KEY` (PEM). When they are unset, CI signs with a one-off self-signed certificate.
+
 ## Known issues / workarounds
 
 - **NODE_OPTIONS conflict**: Claude Code hooks inject `NODE_OPTIONS` pointing to a temp file that doesn't exist, which breaks the `mcpb` CLI. Both scripts prefix commands with `NODE_OPTIONS=` to clear it. If running mcpb manually, prefix the same way: `NODE_OPTIONS= mcpb pack`.
-- **mcpb sign ZIP bug (v2.1.2)**: `mcpb sign` appends the PKCS7 signature but does not update the ZIP end-of-central-directory comment length field. `build.sh` applies a Python patch after signing to fix this. Without it, Claude Desktop shows "Invalid comment length" when opening the file.
+- **mcpb sign ZIP bug (v2.1.2)**: `mcpb sign` appends the PKCS7 signature but does not update the ZIP end-of-central-directory comment length field. `build.sh` runs `scripts/patch-mcpb-comment.js` after signing to fix this. Without it, Claude Desktop shows "Invalid comment length" when opening the file.
 - **mcpb verify broken (v2.1.2)**: `mcpb verify` reports "not signed" even after successful signing. Ignore it — signing works. Confirm by checking the file size increases after signing and that the `MCPB_SIG_END` marker is present.
 
 ## MCPB server details

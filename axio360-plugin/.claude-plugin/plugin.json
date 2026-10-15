@@ -1,6 +1,6 @@
 {
   "name": "axio360",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Connect Claude to Axio360 for cyber risk assessment exploration, scenario analysis, creates/updates, and stakeholder reporting.",
   "author": {
     "name": "Axio"
