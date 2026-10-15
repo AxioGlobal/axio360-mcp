@@ -54,15 +54,13 @@ Built artifacts go to `dist/` (gitignored). Run `./build.sh` then `./package.sh`
 
 - **Node.js** ≥ 18 — [nodejs.org](https://nodejs.org)
 - **mcpb CLI** — `npm install -g @anthropic-ai/mcpb`
-- **Python 3** — for the ZIP patch step (pre-installed on macOS)
-- **pandoc** + **typst** — for `package.sh` PDF rendering (`brew install pandoc typst`)
 
 ### Clone and install
 
 ```bash
-git clone <repo-url>
-cd claude-mcp
-cd axio360-mcpb/server && npm install && cd ../..
+git clone https://github.com/AxioGlobal/axio360-mcp.git
+cd axio360-mcp
+cd mcpb/server && npm install && cd ../..
 ```
 
 ### Build the MCPB
@@ -83,14 +81,12 @@ Runs pack → sign → ZIP patch → copy to `dist/`.
 >
 > `build.sh` will print this command and exit if the certs are missing.
 
-### Assemble the pilot package
+### Build the plugin
 
 ```bash
 ./package.sh
-# → dist/axio360-pilot.zip  (axio360.mcpb, axio360.plugin, GETTING_STARTED.pdf)
+# → dist/axio360.plugin
 ```
-
-Requires `dist/axio360.mcpb` — run `./build.sh` first.
 
 ### Clean build artifacts
 
@@ -99,6 +95,12 @@ Requires `dist/axio360.mcpb` — run `./build.sh` first.
 ```
 
 Removes `dist/` and intermediate artifacts so the next build starts clean.
+
+### Releases
+
+Pull requests build `axio360.mcpb` and `axio360.plugin`. Merging to `main` publishes those two files as a GitHub Release.
+
+The version restarts at `1.0.0`. Each release increments the patch by 1: `1.0.0`, then `1.0.1`, then `1.0.2`. Edit `VERSION` to open the next line (`1.1.0`, `2.0.0`).
 
 ## Requirements
 

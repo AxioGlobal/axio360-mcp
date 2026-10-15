@@ -1,0 +1,192 @@
+# Build the Axio360 MCPB and Cowork plugin.
+#
+# Versions restart at VERSION (1.0.0). Each release increments the patch by 1
+# (1.0.0, 1.0.1, 1.0.2). Set VERSION to 1.1.0 or 2.0.0 to open the next line.
+#
+# Signing uses repository secrets MCPB_SIGNING_CERT and MCPB_SIGNING_KEY (PEM).
+# When those secrets are unset, the bundle is signed with a one-off certificate.
+
+name: Build and release
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to record on the release
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      pr: ${{ steps.pr.outputs.number }}
+      publish: ${{ steps.version.outputs.publish }}
+      signer: ${{ steps.sign.outputs.signer }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mcpb/server/package-lock.json
+
+      - name: Resolve pull request number
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_PR: ${{ github.event.pull_request.number }}
+          INPUT_PR: ${{ github.event.inputs.pr_number }}
+        run: |
+          set -euo pipefail
+          pr="${EVENT_PR:-}"
+          if [[ -z "$pr" && -n "${INPUT_PR:-}" ]]; then
+            pr="$INPUT_PR"
+          fi
+          if [[ -z "$pr" && "$EVENT_NAME" == "push" ]]; then
+            pr="$(gh api -H "Accept: application/vnd.github+json" \
+              "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+              --jq '.[0].number // empty')"
+          fi
+          if [[ -z "$pr" ]]; then
+            subject="$(git log -1 --pretty=%s)"
+            if [[ "$subject" =~ \(#([0-9]+)\) ]]; then
+              pr="${BASH_REMATCH[1]}"
+            fi
+          fi
+          if [[ -n "$pr" && ! "$pr" =~ ^[0-9]+$ ]]; then
+            echo "ERROR: pull request number must be digits (got '$pr')" >&2
+            exit 1
+          fi
+          echo "number=$pr" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          version="$(bash scripts/resolve-version.sh)"
+          publish=false
+          if [[ "$EVENT_NAME" == "push" || "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$GITHUB_REF" == "refs/heads/main" && -n "${PR_NUMBER}" ]]; then
+              publish=true
+            fi
+          fi
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Version"
+            echo
+            echo "\`$version\`"
+            if [[ "$publish" == true ]]; then
+              echo
+              echo "This run publishes a GitHub Release."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stamp version
+        run: node scripts/stamp-version.js "${{ steps.version.outputs.version }}"
+
+      - name: Install server dependencies and mcpb
+        run: |
+          set -euo pipefail
+          npm ci --prefix mcpb/server
+          npm install -g @anthropic-ai/mcpb@2.1.2
+
+      - name: Prepare signing certificate
+        id: sign
+        env:
+          MCPB_SIGNING_CERT: ${{ secrets.MCPB_SIGNING_CERT }}
+          MCPB_SIGNING_KEY: ${{ secrets.MCPB_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${MCPB_SIGNING_CERT}" && -n "${MCPB_SIGNING_KEY}" ]]; then
+            printf '%s\n' "$MCPB_SIGNING_CERT" > cert.pem
+            printf '%s\n' "$MCPB_SIGNING_KEY" > key.pem
+            chmod 600 key.pem
+            echo "signer=repository-secrets" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning title=Ephemeral signing certificate::Set MCPB_SIGNING_CERT and MCPB_SIGNING_KEY so every release is signed by the same key."
+            openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
+              -subj "/CN=Axio/O=Axio/C=US" -addext "extendedKeyUsage=codeSigning"
+            chmod 600 key.pem
+            echo "signer=ephemeral" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build MCPB and plugin
+        run: |
+          set -euo pipefail
+          ./build.sh
+          ./package.sh
+          mkdir -p release-assets
+          cp dist/axio360.mcpb dist/axio360.plugin release-assets/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: axio360-${{ steps.version.outputs.version }}
+          path: release-assets/
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: needs.build.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: axio360-${{ needs.build.outputs.version }}
+          path: release-assets
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PR_NUMBER: ${{ needs.build.outputs.pr }}
+          SIGNER: ${{ needs.build.outputs.signer }}
+        run: |
+          set -euo pipefail
+          tag="v${VERSION}"
+          mcpb="$(find release-assets -name 'axio360.mcpb' -print -quit)"
+          plugin="$(find release-assets -name 'axio360.plugin' -print -quit)"
+          if [[ -z "$mcpb" || -z "$plugin" ]]; then
+            echo "ERROR: release assets are missing" >&2
+            find release-assets -print >&2
+            exit 1
+          fi
+          notes="Built from pull request #${PR_NUMBER}.
+
+          - axio360.mcpb — Claude Desktop
+          - axio360.plugin — Claude Cowork"
+          if [[ "$SIGNER" == "ephemeral" ]]; then
+            notes="${notes}
+
+          Signed with a one-off CI certificate. Set the MCPB_SIGNING_CERT and MCPB_SIGNING_KEY repository secrets so later releases share one signing key."
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$mcpb" "$plugin" --clobber
+          else
+            gh release create "$tag" "$mcpb" "$plugin" \
+              --title "$VERSION" \
+              --notes "$notes"
+          fi
+          echo "Published ${tag}" >> "$GITHUB_STEP_SUMMARY"
