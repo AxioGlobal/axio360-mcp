@@ -38,7 +38,7 @@ This guide walks you through connecting Claude to your Axio360 account so you ca
    ![API Token](./images/claude-mcpb-token.png)
 5. In the **Region** field, enter `ca` (Canada) or `eu` (Europe) if that's where your Axio360 account lives. US customers can leave it blank. (Not case-sensitive.)
 6. Under "Tool Permissions", you can configure which endpoints you want to "Always Allow", "Block", or require Claude to ask for approval.
-   > Axio recommends **"Always Allow"** for read tools (`list_*`, `get_*`, `who_am_i`, `connection_info`) and **"Needs Approval"** (or Blocked) for write tools (`create_*`, `update_*`) so Claude confirms before creating or changing assessments, scenarios, or estimated values. Permissions can be changed later.
+   > Axio recommends **"Always Allow"** for read tools (`list_*`, `get_*`, `who_am_i`, `connection_info`), including `list_air_models`, `list_air_platforms`, `get_crq_ai_job`, and `get_air_job`. Use **"Needs Approval"** (or Blocked) for write tools (`create_*`, `update_*`), including `create_crq_ai_job` and `create_air_job`, so Claude confirms before creating or changing assessments, scenarios, estimated values, or queued generation jobs. Permissions can be changed later.
 
    ![Tool Permissions](./images/claude-mcpb-permissions.png)
 
@@ -79,6 +79,8 @@ Once installed, just ask Claude in plain language:
 > "Create a new scenario collection titled 2026 Enterprise Risk"
 >
 > "Add the catalog ransomware scenario to my 2026 Enterprise Risk collection"
+>
+> "Use CRQ.AI to generate a scenario collection for Example Corp (example.com)"
 
 ### Reports
 

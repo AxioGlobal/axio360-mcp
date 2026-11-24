@@ -129,6 +129,11 @@ Workflow:
   - get_scenario_quadrant_breakdown → likelihood vs impact positioning
 - For portfolio-level analysis, use get_collection_loss_exceedance_curve.
 - To explore benchmark scenarios, use list_catalog_scenarios.
+- To generate a new collection, confirm with the user first, then queue a job:
+  - create_crq_ai_job — company name and domain are required
+  - create_air_job — call list_air_models and list_air_platforms first and pass those ids
+- After either create, poll the matching get_crq_ai_job or get_air_job until finished is true. Use collectionId with the collection tools only after succeeded is true.
+- If the job is still running, tell the user that. Do not invent a collection.
 
 Response format:
 - Use plain business language — avoid jargon unless asked.
@@ -184,7 +189,7 @@ async function main() {
   }
 
   const server = new Server(
-    { name: "axio360", version: "1.5.0" },
+    { name: "axio360", version: "1.6.0" },
     { capabilities: { tools: {}, prompts: {} }, instructions: SERVER_INSTRUCTIONS }
   );
 

@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "axio360",
   "display_name": "Axio360",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Connect Claude to Axio360 for cyber risk assessments, scenario analysis, creates/updates, and stakeholder reporting.",
   "author": {
     "name": "Axio",
@@ -60,7 +60,13 @@
     { "name": "get_scenario_impact_distribution", "description": "Get impact probability distribution for a scenario" },
     { "name": "get_scenario_loss_exceedance_curve", "description": "Get the loss exceedance curve for a scenario" },
     { "name": "get_scenario_quadrant_breakdown", "description": "Get likelihood vs impact quadrant breakdown for a scenario" },
-    { "name": "get_collection_loss_exceedance_curve", "description": "Get the loss exceedance curve for an entire scenario collection" }
+    { "name": "get_collection_loss_exceedance_curve", "description": "Get the loss exceedance curve for an entire scenario collection" },
+    { "name": "create_crq_ai_job", "description": "Queue a CRQ.AI job that generates a scenario collection" },
+    { "name": "get_crq_ai_job", "description": "Get status for a CRQ.AI generation job" },
+    { "name": "list_air_models", "description": "List AI models for an AIR generation job" },
+    { "name": "list_air_platforms", "description": "List AI platforms for an AIR generation job" },
+    { "name": "create_air_job", "description": "Queue an AIR job that generates a scenario collection" },
+    { "name": "get_air_job", "description": "Get status for an AIR generation job" }
   ],
   "prompts": [
     {

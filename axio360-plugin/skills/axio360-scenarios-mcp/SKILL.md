@@ -18,6 +18,12 @@ tools:
   - mcp__axio360__get_scenario_loss_exceedance_curve
   - mcp__axio360__get_scenario_quadrant_breakdown
   - mcp__axio360__get_collection_loss_exceedance_curve
+  - mcp__axio360__create_crq_ai_job
+  - mcp__axio360__get_crq_ai_job
+  - mcp__axio360__list_air_models
+  - mcp__axio360__list_air_platforms
+  - mcp__axio360__create_air_job
+  - mcp__axio360__get_air_job
 ---
 
 # Axio360 Scenario Analyst (MCP)
@@ -41,6 +47,10 @@ Use the Axio360 MCP tools to help the user understand their cyber risk scenarios
 - To create data (confirm with the user first):
   - `create_scenario_collection` — new collection with optional metadata
   - `create_scenario_from_catalog` — add a catalog scenario into a collection (`list_catalog_scenarios` for IDs)
+  - `create_crq_ai_job` — queue CRQ.AI to generate a collection. Company name and domain are required.
+  - `create_air_job` — queue AIR to generate a collection. Call `list_air_models` and `list_air_platforms` first and pass those ids.
+- After `create_crq_ai_job` or `create_air_job`, poll `get_crq_ai_job` or `get_air_job` until `finished` is true. Use `collectionId` with the collection tools only after `succeeded` is true.
+- If the job is still running, tell the user that. Do not invent a collection.
 
 ## Response format
 
